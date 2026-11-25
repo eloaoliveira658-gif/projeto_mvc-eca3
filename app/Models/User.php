@@ -20,6 +20,7 @@ class User
     {
         $stmt = Database::connect()->prepare(
             'SELECT u.id_usuario AS id,
+                    u.login AS login,
                     p.nome AS name,
                     p.email AS email
              FROM usuario u
@@ -128,4 +129,150 @@ class User
 
         return $stmt->fetch() ?: null;
     }
+
+    // Atualiza os dados do usuário
+public static function update(
+    int $id,
+    string $name,
+    string $email,
+    string $login,
+    string $password = ''
+): void {
+
+    $pdo = Database::connect();
+
+    $pdo->beginTransaction();
+
+    try {
+
+        // Busca a pessoa relacionada ao usuário
+        $stmt = $pdo->prepare(
+            'SELECT id_pessoa
+             FROM usuario
+             WHERE id_usuario = ?'
+        );
+
+        $stmt->execute([$id]);
+
+        $idPessoa = $stmt->fetchColumn();
+
+        if (!$idPessoa) {
+            throw new \RuntimeException(
+                'Usuário não encontrado.'
+            );
+        }
+
+        // Atualiza nome e e-mail
+        $stmt = $pdo->prepare(
+            'UPDATE pessoa
+             SET nome = ?, email = ?
+             WHERE id_pessoa = ?'
+        );
+
+        $stmt->execute([
+            $name,
+            $email,
+            $idPessoa
+        ]);
+
+        // Se informou uma nova senha, atualiza também
+        if ($password !== '') {
+
+            $senha = password_hash(
+                $password,
+                PASSWORD_DEFAULT
+            );
+
+            $stmt = $pdo->prepare(
+                'UPDATE usuario
+                 SET login = ?, senha = ?
+                 WHERE id_usuario = ?'
+            );
+
+            $stmt->execute([
+                $login,
+                $senha,
+                $id
+            ]);
+
+        } else {
+
+            $stmt = $pdo->prepare(
+                'UPDATE usuario
+                 SET login = ?
+                 WHERE id_usuario = ?'
+            );
+
+            $stmt->execute([
+                $login,
+                $id
+            ]);
+        }
+
+        $pdo->commit();
+
+    } catch (\Throwable $e) {
+
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $e;
+    }
+  }
+
+
+  // Exclui um usuário
+public static function delete(int $id): void
+{
+    $pdo = Database::connect();
+
+    $pdo->beginTransaction();
+
+    try {
+
+        // Descobre qual pessoa pertence ao usuário
+        $stmt = $pdo->prepare(
+            'SELECT id_pessoa
+             FROM usuario
+             WHERE id_usuario = ?'
+        );
+
+        $stmt->execute([$id]);
+
+        $idPessoa = $stmt->fetchColumn();
+
+        if (!$idPessoa) {
+            throw new \RuntimeException(
+                'Usuário não encontrado.'
+            );
+        }
+
+        // Exclui o usuário
+        $stmt = $pdo->prepare(
+            'DELETE FROM usuario
+             WHERE id_usuario = ?'
+        );
+
+        $stmt->execute([$id]);
+
+        // Exclui a pessoa relacionada
+        $stmt = $pdo->prepare(
+            'DELETE FROM pessoa
+             WHERE id_pessoa = ?'
+        );
+
+        $stmt->execute([$idPessoa]);
+
+        $pdo->commit();
+
+    } catch (\Throwable $e) {
+
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $e;
+    }
+  }
 }

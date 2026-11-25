@@ -11,6 +11,7 @@ class UserController
         $this->render('users/index', [
             'title' => 'Usuários',
             'users' => User::all(),
+            'csrf' => $this->csrfToken(),
         ]);
     }
 
@@ -200,4 +201,130 @@ class UserController
             $vars
         );
     }
+
+    // Salva as alterações do usuário
+public function update(string $id = ''): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Método não permitido.');
+    }
+
+    $this->checkCsrf();
+
+    $id = (int) $id;
+
+    $user = User::find($id);
+
+    if (!$user) {
+        http_response_code(404);
+        exit('Usuário não encontrado.');
+    }
+
+    $input = [
+        'name' => trim($_POST['name'] ?? ''),
+        'email' => trim($_POST['email'] ?? ''),
+        'login' => trim($_POST['login'] ?? ''),
+        'password' => $_POST['password'] ?? '',
+    ];
+
+    $errors = [];
+
+    // Valida nome
+    if ($input['name'] === '') {
+        $errors['name'] = 'Informe o nome.';
+    } elseif (mb_strlen($input['name']) > 100) {
+         }
+
+    // Valida e-mail
+    if (!filter_var(
+        $input['email'],
+        FILTER_VALIDATE_EMAIL
+    )) {
+        $errors['email'] = 'Informe um e-mail válido.';
+    }
+
+    // Valida login
+    if (!preg_match(
+        '/^[a-zA-Z0-9_.-]{4,50}$/',
+        $input['login']
+    )) {
+        $errors['login'] = 'Login inválido.';
+    }
+
+    // Valida senha somente se foi informada
+    if (
+        $input['password'] !== '' &&
+        strlen($input['password']) < 8
+    ) {
+        $errors['password'] =
+            'A senha precisa ter pelo menos 8 caracteres.';
+    }
+
+    // Verifica e-mail duplicado
+    if (
+        !$errors &&
+        User::emailExists($input['email']) &&
+        $input['email'] !== $user['email']
+    ) {
+        $errors['email'] =
+            'Este e-mail já está cadastrado.';
+    }
+
+    // Verifica login duplicado
+    if (
+        !$errors &&
+        User::loginExists($input['login'])
+    ) {
+        $current = User::findByLogin($input['login']);
+
+        if (!$current || (int) $current['id'] !== $id) {
+            $errors['login'] =
+                'Este login já está cadastrado.';
+        }
+    }
+
+    // Se houver erros, volta para o formulário
+    if ($errors) {
+
+        http_response_code(422);
+
+        $this->render('users/edit', [
+            'title' => 'Editar usuário',
+            'user' => array_merge($user, $input),
+            'errors' => $errors,
+            'csrf' => $this->csrfToken(),
+        ]);
+
+        return;
+    }
+
+    // Atualiza no banco
+    User::update(
+        $id,
+        $input['name'],
+        $input['email'],
+        $input['login'],
+        $input['password']
+    );
+
+    header('Location: ' . url('user/index'));
+    exit;
+}
+
+// Exclui o usuário
+public function destroy(string $id = ''): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Método não permitido.');
+    }
+
+    $this->checkCsrf();
+
+    User::delete((int) $id);
+
+    header('Location: ' . url('user/index'));
+    exit;
+}
 }

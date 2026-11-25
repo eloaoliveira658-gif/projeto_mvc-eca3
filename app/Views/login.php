@@ -2,7 +2,7 @@
 use App\Models\User;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    require_once __DIR__ . '/../Views/users/login.php';
+    require_once __DIR__ . '/../Views/login.php';
     return;
 }
 
