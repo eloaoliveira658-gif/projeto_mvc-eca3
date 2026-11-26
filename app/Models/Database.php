@@ -23,3 +23,5 @@ class Database
         return self::$pdo;
     }
 }
+
+// cod database.php onde fica a parte de conexão com o banco de dados, usando PDO para conectar ao MySQL.

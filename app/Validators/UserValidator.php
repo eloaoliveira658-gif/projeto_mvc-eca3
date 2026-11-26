@@ -40,3 +40,6 @@ class UserValidator
         return $errors;
     }
 }
+
+
+// cod cadrastro onde fica a parte de validação do usuário, como nome, email, login e senha.
