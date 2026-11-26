@@ -1,5 +1,5 @@
 
-<section class="banner">
+<section class="banner" id="banner-principal">
     <div class="banner-texto">
         <h1>Seus direitos também existem no mundo digital!</h1>
 
@@ -14,9 +14,7 @@
         </a>
     </div>
 
-    <div class="banner-imagem">
-        <img src="<?= e(asset('img/jovens.png')) ?>" alt="Jovens utilizando a internet">
-    </div>
+   
 </section>
 
 <section class="explorar">

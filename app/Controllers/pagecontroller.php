@@ -3,7 +3,7 @@ namespace App\Controllers;
 
 class PageController
 {
-    protected function render(string $view, string $title): void
+    protected function render(string $view, string $title, array $dados = []): void
     {
         $arquivo = __DIR__. '/../Views/' . $view . '.php';
 
@@ -12,10 +12,13 @@ class PageController
             exit('Página não encontrada.');
         }
 
+        extract($dados);
+
         ob_start();
         require $arquivo;
         $content = ob_get_clean();
 
         require __DIR__ . '/../Views/layouts/main.php';
     }
+    
 }

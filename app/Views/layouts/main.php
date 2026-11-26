@@ -28,7 +28,7 @@ initial-scale=1">
         <a href="<?= e(url('direitos/index')) ?>">Direitos Digitais</a>
         <a href="<?= e(url('seguranca/index')) ?>">Segurança</a>
         <a href="<?= e(url('responsaveis/index')) ?>">Responsáveis</a>
-        <a href="<?= e(url('ajuda/index')) ?>">Ajuda</a>
+        <a href="<?= e(url('chat/index')) ?>">Chat</a>
         <a href="<?= e(url('sobre/index')) ?>">Sobre Nós</a>
     </nav>
 
